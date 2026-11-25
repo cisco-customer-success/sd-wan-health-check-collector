@@ -346,6 +346,8 @@ def collect_all(c: "Collector", max_edges: int = 100, progress=None, log=None, e
     parcels = E.parcel_jobs(res)
     plan({"light": len(parcels) - n_profiles})  # replace the estimate with the real number
     res.append(c.collect_paths("feature_parcels", parcels, progress))
+    plan({"light": len(E.DR_PATHS)})
+    res.append(c.collect_paths("dr_info", E.DR_PATHS, progress))
     say("Waiting for the remaining running configurations…")
     res += pending()
     return res

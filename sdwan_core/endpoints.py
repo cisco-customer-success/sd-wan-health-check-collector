@@ -193,7 +193,18 @@ def config_group_jobs(results) -> list[tuple[str, dict[str, str]]]:
 
 
 # Keys collected per id outside ENDPOINTS (config groups); counted by collection_count().
-PER_ID_KEYS = ["config_group_devices", "feature_profiles", "feature_parcels"]
+PER_ID_KEYS = ["config_group_devices", "feature_profiles", "feature_parcels", "dr_info"]
+
+# Manager disaster recovery detail: small GETs stored together as one data set ("dr_info", per_id by name).
+# On Managers without DR some of them answer with an error; the data set counts as read when any succeeds.
+DR_PATHS: dict[str, str] = {
+    "status": "/dataservice/disasterrecovery/status",            # drStatus: drenabled, pauseDR, pauseReplication
+    "datacenters": "/dataservice/disasterrecovery/drstatus",     # [{dcPersonality, mgmtIPAddress}]
+    "schedule": "/dataservice/disasterrecovery/schedule",        # schedule: interval, startTime, delayThreshold
+    "last_switch": "/dataservice/disasterrecovery/localLatestHistory",  # lastSwitch, reasonForSwitch, updatedPrimary
+    "remote_dc": "/dataservice/disasterrecovery/remotedc",       # [{name, ip, state, ...}]
+    "history": "/dataservice/disasterrecovery/history",
+}
 
 
 def collection_count() -> int:
