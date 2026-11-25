@@ -47,6 +47,13 @@ FIXED_START, FIXED_END = 4.0, 3.0
 # Collector / tool release history, newest first. Bump collector_app/VERSION to CHANGELOG[0][0] whenever
 # a collection data set is added (tests enforce that endpoints.collection_count() and the version stay in step).
 CHANGELOG: list[tuple[str, str, int, list[str]]] = [  # (version, date, endpoint count, what's new)
+    ("1.7.0", "2026-11-26", 111, [
+        "Traffic & utilisation: reads 7-day top applications, application families and top talkers (from app "
+        "recognition, where routers have it switched on) and average/peak use of every WAN circuit.",
+        "Hourly 7-day history for charts: each WAN circuit and each router's tunnels (per colour), the 200 busiest "
+        "site-to-site tunnel pairs (with loss, delay and jitter), top talkers per router, applications (whole network and per router with app recognition).",
+        "All reads are summaries the Manager calculates itself (read-only); the hourly history follows the same router limit "
+        "as the other per-router data."]),
     ("1.6.0", "2026-11-25", 95, [
         "Disaster recovery: reads the Manager DR set-up (data centre roles, DR enabled/paused, replication schedule, "
         "last switchover, remote data centre state and history) for the new Disaster Recovery section.",

@@ -350,4 +350,10 @@ def collect_all(c: "Collector", max_edges: int = 100, progress=None, log=None, e
     res.append(c.collect_paths("dr_info", E.DR_PATHS, progress))
     say("Waiting for the remaining running configurations…")
     res += pending()
+    jobs = E.series_jobs(res)
+    plan({"light": sum(len(p) for _, p in jobs)})
+    cnt = {k: len(p) for k, p in jobs}
+    say(f"Reading 7-day hourly history ({sum(cnt.values())} summary reads: {cnt.get('circuit_series', 0)} routers' circuits, "
+        f"{cnt.get('tunnel_series', 0)} routers' tunnels, {cnt.get('site_pair_series', 0)} site pairs, {cnt.get('app_series', 0)} application sets)…")
+    res += [c.collect_paths(k, p, progress) for k, p in jobs]
     return res
