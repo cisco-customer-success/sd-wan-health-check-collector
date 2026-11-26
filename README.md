@@ -6,7 +6,7 @@ for the Cisco SD-WAN assessment (`sdwan-assessor`). Run it at the customer site,
 - **Read-only:** only GET requests are sent. Nothing on the Manager is changed. A read-only Manager account is enough.
 - **No secrets kept:** the password is used once to log in and is never stored. Passwords, keys, SNMP communities,
   hashes and session tokens are replaced with `[redacted]` before anything is written.
-- **Reviewable:** the zip contains `README.txt`, `manifest.json` and `raw/*.json` (plain JSON) so the customer can check what is shared.
+- **Reviewable:** the zip contains `README.txt`, `manifest.json` and `raw/*.json` (plain JSON) so the customer can check what is shared – easiest with the built-in viewer (`viewer.html`).
 - **Fast:** 20 parallel API calls plus bulk APIs. A small fabric takes about 20 seconds, a large one a few minutes.
 
 ## Requirements
@@ -81,6 +81,19 @@ network without TLS, so it isn't recommended.
 ## Output
 `output/sdwan_collection_<customer>_<timestamp>.zip`. Import it in the assessor
 (**Import collection** on the home page, or `python -m sdwan_assessor.importer <zip>`).
+
+## Review what was collected
+- **Web page:** after the collection, click **View collected data**.
+- **Any time later:** open `viewer.html` (in this folder) in a browser and choose the zip, or drop it on the page.
+
+The viewer lists every data set:
+- collected ✓ or not available ✗;
+- its file in the zip (`raw/<name>.json`);
+- the API it came from;
+- the number of records and the size.
+
+Click a data set to read its JSON file (tree or text view, line search, copy, download).
+Everything stays in your browser: nothing is uploaded or changed.
 
 ## Troubleshooting
 | Message | What to do |

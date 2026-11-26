@@ -64,7 +64,8 @@ What it does NOT contain
 - Session tokens, passwords, keys, SNMP communities or password hashes:
   these were replaced with "[redacted]" before anything was written.
 
-Review raw/*.json if you want to see exactly what is shared. Send this zip to your
+Review raw/*.json if you want to see exactly what is shared (easiest: open viewer.html
+from the collector folder in a browser and choose this zip). Send this zip to your
 Cisco team; they will import it into the assessment tool.
 """
 

@@ -50,7 +50,7 @@ footer{padding:40px 0;color:var(--d);font-size:13px;border-top:1px solid var(--l
 </style>
 </head>
 <body>
-<nav><div class="wrap"><b>SD-WAN <i>HEALTH CHECK</i> COLLECTOR <small class="navver" style="font-size:11px;font-weight:400;opacity:.65;letter-spacing:0;text-transform:none">v1.7.0</small></b><span class="sp"></span>
+<nav><div class="wrap"><b>SD-WAN <i>HEALTH CHECK</i> COLLECTOR <small class="navver" style="font-size:11px;font-weight:400;opacity:.65;letter-spacing:0;text-transform:none">v1.8.0</small></b><span class="sp"></span>
 <a class="hide" href="#how">How it works</a><a class="hide" href="#run">Run it</a><a class="hide" href="#safe">Safety</a><a href="#send">Send the zip</a><a href="#faq">FAQ</a></div></nav>
 
 <header class="hero wrap">
@@ -60,7 +60,7 @@ footer{padding:40px 0;color:var(--d);font-size:13px;border-top:1px solid var(--l
     data from your SD-WAN Manager, <b>never changes anything</b>, and saves one zip file for you to send back.</p>
   <a class="btn" id="dl" href="#">⬇&nbsp; Download the collector</a>
   <div class="meta">Windows · macOS · Linux &nbsp;·&nbsp; needs Python 3.9+ &nbsp;·&nbsp; <a id="rel" href="#">all versions</a></div>
-  <div class="meta ver" style="font-size:11px;opacity:.7;margin-top:4px">Version 1.7.0 · 2026-11-26</div>
+  <div class="meta ver" style="font-size:11px;opacity:.7;margin-top:4px">Version 1.8.0 · 2026-11-26</div>
   <div class="pills"><span class="pill"><i>●</i> Read-only (GET requests only)</span><span class="pill"><i>●</i> Password never stored</span>
   <span class="pill"><i>●</i> Secrets redacted before saving</span><span class="pill"><i>●</i> Runs only on your computer</span></div>
 </header>
@@ -140,8 +140,9 @@ cd sdwan-health-check-collector*
     <ol>
       <li><b>Ask your Cisco Customer Success Specialist (CSS) engineer how to send it.</b> They will give you a secure way to share it.</li>
       <li>Don’t post the file in public places, shared chat rooms or public file links.</li>
-      <li>Optional: open the zip first and review <code>README.txt</code> and the <code>raw</code> folder. You will see that
-        secrets are already replaced with <code>[redacted]</code>.</li>
+      <li>Optional: review exactly what you share. Click <b>View collected data</b> when the collection finishes, or later
+        open <code>viewer.html</code> in the collector folder and choose the zip. It lists every data set and its JSON file,
+        and runs only in your browser. You will see that secrets are already replaced with <code>[redacted]</code>.</li>
       <li>After you’ve sent it, you can delete the local copy from the collector’s <code>output</code> folder.</li>
     </ol></div>
 </section>

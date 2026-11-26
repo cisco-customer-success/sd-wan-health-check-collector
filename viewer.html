@@ -1,0 +1,262 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'unsafe-inline'; style-src 'unsafe-inline'; img-src data:; connect-src 'self'">
+<title>Collected data viewer – SD-WAN Health Check Collector</title>
+<!-- Read-only viewer for a collection zip. Runs fully in this browser: nothing is uploaded, nothing is changed.
+     Opens a zip chosen by the user, or the one served by the collector app (#zip=/download/<id>). -->
+<style>
+:root{--bg:#07182D;--panel:#0d2340;--panel2:#12294a;--line:#23406a;--text:#fff;--body:#c9d3df;--muted:#8a9bb0;--cyan:#02C8FF;--blue:#0A60FF;--g:#1fb86a;--mag:#FF007F;--org:#FF9000}
+*{box-sizing:border-box}html,body{margin:0;background:var(--bg);color:var(--body);font:14px/1.45 "CiscoSansTT",Arial,Helvetica,sans-serif}
+header{display:flex;align-items:center;gap:14px;padding:14px 22px;border-bottom:1px solid var(--line);background:#061426;position:sticky;top:0;z-index:5}
+header h1{font-size:17px;color:var(--text);margin:0;font-weight:600}header .sp{flex:1}
+.wrap{padding:18px 22px;max-width:1500px;margin:0 auto}
+.card{background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:16px;margin-bottom:14px}
+.btn{display:inline-flex;align-items:center;gap:6px;border:1px solid var(--line);background:var(--panel2);color:var(--text);border-radius:6px;padding:6px 12px;font:inherit;font-size:13px;cursor:pointer;text-decoration:none}
+.btn:hover{border-color:var(--cyan)}.btn.on{border-color:var(--cyan);box-shadow:inset 0 -2px 0 var(--cyan)}
+.drop{border:2px dashed var(--line);border-radius:12px;padding:40px;text-align:center;cursor:pointer}.drop.over{border-color:var(--cyan);background:var(--panel2)}
+.drop b{color:var(--text);font-size:16px}
+.kv{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:10px}.kv div span{display:block;color:var(--muted);font-size:12px}.kv div b{color:var(--text);font-weight:600;word-break:break-all}
+.bar{display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin-bottom:10px}
+input[type=search]{background:var(--bg);border:1px solid var(--line);color:var(--text);border-radius:6px;padding:7px 10px;font:inherit;min-width:260px}
+table{width:100%;border-collapse:collapse}th,td{text-align:left;padding:7px 8px;border-bottom:1px solid var(--line);vertical-align:top}
+th{color:var(--muted);font-size:12px;font-weight:600;cursor:pointer;user-select:none;white-space:nowrap}tbody tr{cursor:pointer}tbody tr:hover{background:var(--panel2)}
+tr.sel{background:var(--panel2);box-shadow:inset 3px 0 0 var(--cyan)}
+.path{overflow-wrap:anywhere;white-space:normal}
+.fname{color:var(--cyan);overflow-wrap:anywhere}
+code,.mono{font-family:ui-monospace,Menlo,Consolas,monospace;font-size:12px}
+.ok{color:var(--g)}.no{color:var(--mag)}.muted{color:var(--muted)}.small{font-size:12px}.r{text-align:right;white-space:nowrap}
+.split{display:grid;grid-template-columns:minmax(420px,5fr) 6fr;gap:14px;align-items:start}
+@media(max-width:1100px){.split{grid-template-columns:1fr}}
+#viewer{position:sticky;top:70px;max-height:calc(100vh - 86px);display:flex;flex-direction:column}
+#vbody{overflow:auto;flex:1;min-height:200px;background:var(--bg);border:1px solid var(--line);border-radius:8px;padding:10px}
+.jn{font-family:ui-monospace,Menlo,Consolas,monospace;font-size:12px;padding-left:16px;white-space:nowrap}
+.jt{cursor:pointer;color:var(--text)}.jt:before{content:"▸ ";color:var(--muted)}.jt.open:before{content:"▾ "}
+.k{color:var(--cyan)}.s{color:#9fe0a8;white-space:pre-wrap}.n{color:#ffb86b}.b{color:#ff8fc8}.z{color:var(--muted)}
+.more{margin:4px 0 4px 16px}
+pre.txt{margin:0;font-family:ui-monospace,Menlo,Consolas,monospace;font-size:12px;white-space:pre-wrap;word-break:break-all;color:var(--body)}
+.ln{color:var(--muted);user-select:none;display:inline-block;min-width:52px}
+.err{background:#3a0b22;border:1px solid var(--mag);color:#ffd0e6;padding:10px;border-radius:8px}
+.note{font-size:12px;color:var(--muted);margin-top:8px}
+</style></head>
+<body>
+<header><h1>SD-WAN Health Check – collected data viewer</h1><span class="sp"></span>
+ <span class="small muted">Read-only · runs in this browser · nothing is uploaded</span>
+ <label class="btn" id="openbtn" style="display:none">Open another zip<input type="file" accept=".zip" hidden id="file2"></label></header>
+<div class="wrap">
+ <div class="card" id="pick">
+  <label class="drop" id="drop"><input type="file" accept=".zip" hidden id="file">
+   <b>Choose the collection zip</b><br><span class="muted">or drop it here – file name like <code>sdwan_collection_&lt;customer&gt;_&lt;date&gt;.zip</code></span></label>
+  <p class="note">The zip is opened only inside this browser on your computer. Passwords, keys and tokens were already replaced with
+   <code>[redacted]</code> by the collector before the zip was written.</p></div>
+ <div id="msg"></div>
+ <div id="main" hidden>
+  <div class="card"><div class="kv" id="sum"></div>
+   <p class="note" id="sumnote"></p></div>
+  <div class="split">
+   <div class="card"><div class="bar"><input type="search" id="q" placeholder="Search data sets, files or API paths…">
+     <span id="flt"></span><span class="sp"></span><span class="small muted" id="cnt"></span></div>
+    <table><thead><tr><th data-s="ok">Status</th><th data-s="name">Data set · file in the zip · API</th><th data-s="recs" class="r">Records</th><th data-s="size" class="r">Size</th></tr></thead>
+     <tbody id="rows"></tbody></table></div>
+   <div class="card" id="viewer"><div class="muted">Click a data set to see its JSON file.</div></div>
+  </div></div>
+</div>
+<script>
+"use strict";
+const $=id=>document.getElementById(id);
+const el=(tag,cls,text)=>{const e=document.createElement(tag); if(cls) e.className=cls; if(text!=null) e.textContent=text; return e;};
+const fmtB=n=>n==null?"–":n<1024?n+" B":n<1048576?(n/1024).toFixed(1)+" KB":(n/1048576).toFixed(1)+" MB";
+const ACR=new Set(["aaa","api","bfd","cert","cli","dia","dpi","dr","eox","hsec","id","ip","ips","msla","nat","ntp","omp","qos","sig","sla","snmp","ssl","tls","tloc","ugroup","url","utd","vpn","ztp","24h","7d"]);
+const human=k=>{const w=String(k).replace(/_/g," ").split(" ").map(x=>ACR.has(x.toLowerCase())?x.toUpperCase().replace("24H","24 h").replace("7D","7 days"):x);
+  const s=w.join(" "); return s.charAt(0).toUpperCase()+s.slice(1);};
+const shortPath=p=>{ let s=String(p||""); try{ s=decodeURIComponent(s); }catch(e){} const i=s.indexOf("?"); return i<0?s:s.slice(0,i)+(s.length>i+1?"?…":""); };
+const slug=k=>String(k).replace(/[^A-Za-z0-9_.-]+/g,"_");  // same rule as the collector's file names
+let ZIP=null, BUF=null, ROWS=[], SORT={k:"ok",d:1}, FILT="all", SEL=null;
+
+/* ---------- zip reading (stored or deflate; uses the browser's built-in decompression) ---------- */
+function readZip(buf){
+  const dv=new DataView(buf), u8=new Uint8Array(buf), td=new TextDecoder();
+  let e=-1; for(let i=buf.byteLength-22;i>=Math.max(0,buf.byteLength-65557);i--){ if(dv.getUint32(i,true)===0x06054b50){e=i;break;} }
+  if(e<0) throw new Error("This is not a zip file.");
+  const n=dv.getUint16(e+10,true); let p=dv.getUint32(e+16,true); const out=new Map();
+  for(let k=0;k<n;k++){
+    if(dv.getUint32(p,true)!==0x02014b50) throw new Error("The zip file is damaged (central directory).");
+    const fl=dv.getUint16(p+28,true), xl=dv.getUint16(p+30,true), cl=dv.getUint16(p+32,true);
+    const name=td.decode(u8.subarray(p+46,p+46+fl));
+    out.set(name,{name, method:dv.getUint16(p+10,true), csize:dv.getUint32(p+20,true), usize:dv.getUint32(p+24,true), lho:dv.getUint32(p+42,true)});
+    p+=46+fl+xl+cl; }
+  return out;
+}
+async function entryText(e){
+  const dv=new DataView(BUF);
+  if(dv.getUint32(e.lho,true)!==0x04034b50) throw new Error("The zip file is damaged ("+e.name+").");
+  const start=e.lho+30+dv.getUint16(e.lho+26,true)+dv.getUint16(e.lho+28,true);
+  const data=new Uint8Array(BUF,start,e.csize);
+  if(e.method===0) return new TextDecoder().decode(data);
+  if(e.method!==8) throw new Error("Unsupported compression in "+e.name+".");
+  if(typeof DecompressionStream==="undefined") throw new Error("This browser is too old to open zip files. Please use a current Chrome, Edge, Firefox or Safari.");
+  return await new Response(new Blob([data]).stream().pipeThrough(new DecompressionStream("deflate-raw"))).text();
+}
+const CACHE=new Map();
+async function entryJSON(name){ if(!CACHE.has(name)) CACHE.set(name,JSON.parse(await entryText(ZIP.get(name)))); return CACHE.get(name); }
+
+/* ---------- load ---------- */
+function showErr(m){ $("msg").innerHTML=""; const d=el("div","err",m); $("msg").append(d); }
+async function load(buf, label){
+  $("msg").innerHTML=""; CACHE.clear(); SEL=null;
+  try{ BUF=buf; ZIP=readZip(buf);
+    if(!ZIP.has("manifest.json")) throw new Error("manifest.json is missing – this does not look like a collection zip.");
+    const m=await entryJSON("manifest.json");
+    ROWS=[]; const seen=new Set();
+    for(const ep of (m.endpoints||[])){
+      const file=`raw/${slug(ep.key)}.json`, z=ZIP.get(file); seen.add(file);
+      ROWS.push({key:ep.key, name:human(ep.key), path:ep.path||"", ok:!!ep.ok, status:ep.status, error:ep.error||"", seconds:ep.seconds,
+                 file:z?file:"", size:z?z.usize:null, recs:null}); }
+    for(const [name,z] of ZIP){ if(seen.has(name)||name.endsWith("/")) continue;
+      ROWS.push({key:name, name:name==="manifest.json"?"Manifest (what was collected, by whom, when)":name==="README.txt"?"Read me":human(name.replace(/^raw\//,"").replace(/\.json$/,"")),
+                 path:"", ok:true, file:name, size:z.usize, recs:null, meta:true}); }
+    summary(m, label); $("pick").hidden=true; $("openbtn").style.display=""; $("main").hidden=false;
+    filters(); render(); viewer(null); countRecords();
+  }catch(e){ showErr("Could not open the zip: "+e.message); }
+}
+function summary(m,label){
+  const ok=(m.endpoints||[]).filter(e=>e.ok).length, all=(m.endpoints||[]).length;
+  const c=m.collector||{}, t=String(m.collected_utc||"");
+  const when=/^\d{8}-\d{6}$/.test(t)?`${t.slice(0,4)}-${t.slice(4,6)}-${t.slice(6,8)} ${t.slice(9,11)}:${t.slice(11,13)} UTC`:t;
+  const kv=[["Customer",m.customer],["SD-WAN Manager",m.manager],["Collected by (user name)",m.user],["Collected",when],
+            ["Collector",`${c.name||""} ${c.version||""}`],["Data sets",`${ok} collected · ${all-ok} not available`],["Zip file",label]];
+  $("sum").replaceChildren(...kv.map(([k,v])=>{const d=el("div"); d.append(el("span",null,k),el("b",null,v==null||v===""?"–":String(v))); return d;}));
+  $("sumnote").textContent="Each data set is one read-only API call to your SD-WAN Manager, saved as one JSON file in the zip. "
+    +"Data sets marked ✗ were not returned by the Manager (for example a feature that is not used or not supported by its release); nothing was saved for them.";
+}
+async function countRecords(){  // background: record counts, small files first
+  for(const r of ROWS.filter(r=>r.file&&r.file.endsWith(".json")).sort((a,b)=>a.size-b.size)){
+    if(r.size>40e6) continue;
+    try{ const j=await entryJSON(r.file); r.recs=records(j); CACHE.delete(r.file); }catch(e){ r.recs="?"; }
+    const c=document.querySelector(`tr[data-k="${CSS.escape(r.key)}"] td:nth-child(3)`); if(c) c.textContent=recText(r.recs); }
+}
+function records(j){
+  if(Array.isArray(j)) return {n:j.length,u:"items"};
+  if(j&&typeof j==="object"){
+    if(j.per_id&&typeof j.per_id==="object") return {n:Object.keys(j.per_id).length,u:"devices/items"};
+    if(Array.isArray(j.data)) return {n:j.data.length,u:"records"};
+    return {n:Object.keys(j).length,u:"fields"}; }
+  return null;
+}
+const recText=r=>r==null?"…":r==="?"?"?":`${r.n.toLocaleString()} ${r.n===1?r.u.replace(/s$/,"").replace("devices/item","device/item"):r.u}`;
+
+/* ---------- list ---------- */
+function filters(){
+  const n={all:ROWS.length, ok:ROWS.filter(r=>r.ok&&!r.meta).length, no:ROWS.filter(r=>!r.ok).length};
+  const b=[["all","All"],["ok","✓ Collected"],["no","✗ Not available"]];
+  $("flt").replaceChildren(...b.map(([k,l])=>{const x=el("button","btn"+(FILT===k?" on":""),`${l} (${n[k]})`); x.onclick=()=>{FILT=k; filters(); render();}; return x;}));
+}
+function render(){
+  const q=$("q").value.trim().toLowerCase();
+  const vis=ROWS.filter(r=>(FILT==="all"||(FILT==="ok"?r.ok&&!r.meta:!r.ok))&&(!q||[r.key,r.name,r.file,r.path,r.error].join(" ").toLowerCase().includes(q)));
+  const v=r=>SORT.k==="ok"?(r.meta?0:r.ok?1:2):SORT.k==="recs"?(r.recs&&r.recs.n)||0:SORT.k==="size"?r.size||0:String(r[SORT.k]||"").toLowerCase();
+  vis.sort((a,b)=>{const x=v(a),y=v(b); return (x<y?-1:x>y?1:0)*SORT.d||a.name.localeCompare(b.name);});
+  $("rows").replaceChildren(...vis.map(r=>{
+    const tr=el("tr"); tr.dataset.k=r.key; if(SEL===r.key) tr.className="sel";
+    const st=el("td",r.ok?"ok":"no",r.ok?"✓":"✗"); st.title=r.ok?"Collected":"Not available: "+(r.error||("HTTP "+r.status));
+    const nm=el("td"); nm.append(el("div",null,r.name));
+    const fi=el("div","mono fname",r.file?"📄 "+r.file:"– no file"); if(!r.file) fi.classList.add("muted"); nm.append(fi);
+    if(r.path){ const pd=el("div","mono muted path",shortPath(r.path)); pd.title=(()=>{try{return decodeURIComponent(r.path);}catch(e){return r.path;}})(); nm.append(pd); }
+    if(!r.ok) nm.append(el("div","small no",r.error||("HTTP "+r.status)));
+    tr.append(st,nm,el("td","r small",r.file&&r.file.endsWith(".json")?recText(r.recs):"–"),el("td","r small",fmtB(r.size)));
+    tr.onclick=()=>{ SEL=r.key; document.querySelectorAll("#rows tr").forEach(x=>x.classList.toggle("sel",x===tr)); viewer(r); };
+    return tr; }));
+  $("cnt").textContent=`${vis.length} of ${ROWS.length} shown`;
+}
+document.querySelectorAll("th[data-s]").forEach(th=>th.onclick=()=>{const k=th.dataset.s; SORT=SORT.k===k?{k,d:-SORT.d}:{k,d:1}; render();});
+$("q").oninput=render;
+
+/* ---------- JSON viewer ---------- */
+let VMODE="tree";
+async function viewer(r){
+  const V=$("viewer");
+  if(!r){ V.replaceChildren(el("div","muted","Click a data set to see its JSON file.")); return; }
+  const head=el("div"); head.append(el("h3",null,r.name)); head.querySelector("h3").style.margin="0 0 4px";
+  head.append(el("div","mono muted path",(r.file||"no file")+(r.path?"   ·   API: "+shortPath(r.path):"")));
+  if(r.path&&r.path.includes("?")){ const d=el("details","small"); d.append(el("summary","muted","Full API request"),el("div","mono path",(()=>{try{return decodeURIComponent(r.path);}catch(e){return r.path;}})())); head.append(d); }
+  if(!r.file){ V.replaceChildren(head,el("p","no","Not available: "+(r.error||("HTTP "+r.status))+". Nothing was saved for this data set.")); return; }
+  const bar=el("div","bar"); bar.style.marginTop="10px";
+  const bTree=el("button","btn"+(VMODE==="tree"?" on":""),"Tree"), bText=el("button","btn"+(VMODE==="text"?" on":""),"Text");
+  const find=el("input"); find.type="search"; find.placeholder="Show only lines containing…"; find.style.minWidth="200px"; find.hidden=VMODE!=="text";
+  const bCopy=el("button","btn","Copy"), bDl=el("button","btn","Download this file"), info=el("span","small muted");
+  bar.append(bTree,bText,find,bCopy,bDl,info);
+  const body=el("div"); body.id="vbody"; body.append(el("div","muted","Opening…"));
+  V.replaceChildren(head,bar,body);
+  let text;
+  try{ text=await entryText(ZIP.get(r.file)); }catch(e){ body.replaceChildren(el("div","err",e.message)); return; }
+  if(SEL!==r.key) return;  // the user clicked something else meanwhile
+  const isJson=r.file.endsWith(".json"); let val=null;
+  if(isJson){ try{ val=JSON.parse(text); }catch(e){ VMODE="text"; } } else VMODE="text";
+  info.textContent=fmtB(text.length)+(val!==null?" · Text view shows multi-line values (like configs) as lines; Copy/Download give the original file":"");
+  const draw=()=>{ bTree.classList.toggle("on",VMODE==="tree"); bText.classList.toggle("on",VMODE==="text"); find.hidden=VMODE!=="text"; bTree.disabled=val===null;
+    if(VMODE==="tree"&&val!==null){ body.replaceChildren(jnode(null,val,true)); }
+    else drawText(body, val!==null?readable(val):text, find.value); };
+  bTree.onclick=()=>{VMODE="tree"; draw();}; bText.onclick=()=>{VMODE="text"; draw();};
+  find.oninput=()=>draw();
+  bCopy.onclick=async()=>{ try{ await navigator.clipboard.writeText(val!==null?JSON.stringify(val,null,2):text); bCopy.textContent="Copied ✓"; }
+    catch(e){ bCopy.textContent="Copy not allowed here – use Download"; } setTimeout(()=>bCopy.textContent="Copy",2500); };
+  bDl.onclick=()=>{ const a=el("a"); a.href=URL.createObjectURL(new Blob([text],{type:isJson?"application/json":"text/plain"}));
+    a.download=r.file.split("/").pop(); document.body.append(a); a.click(); setTimeout(()=>{URL.revokeObjectURL(a.href); a.remove();},1000); };
+  draw();
+}
+function readable(v, ind=""){  // pretty JSON, but multi-line text values (e.g. running configs) shown as real lines
+  if(typeof v==="string") return v.includes("\n")?'"""\n'+v.replace(/\r/g,"").split("\n").map(l=>ind+"  "+l).join("\n")+"\n"+ind+'"""':JSON.stringify(v);
+  if(v===null||typeof v!=="object") return JSON.stringify(v);
+  const n=ind+"  ";
+  if(Array.isArray(v)) return v.length?"[\n"+v.map(x=>n+readable(x,n)).join(",\n")+"\n"+ind+"]":"[]";
+  const k=Object.keys(v); return k.length?"{\n"+k.map(x=>n+JSON.stringify(x)+": "+readable(v[x],n)).join(",\n")+"\n"+ind+"}":"{}";
+}
+function drawText(body, s, term){
+  const LIM=2_000_000, pre=el("pre","txt");
+  if(term){ const t=term.toLowerCase(), lines=s.split("\n"), hit=[];
+    for(let i=0;i<lines.length&&hit.length<3000;i++) if(lines[i].toLowerCase().includes(t)) hit.push([i+1,lines[i]]);
+    const f=document.createDocumentFragment(); hit.forEach(([n,l])=>{f.append(el("span","ln",n+" "),l+"\n");});
+    pre.append(f); body.replaceChildren(el("div","small muted",`${hit.length}${hit.length>=3000?"+":""} matching line(s)`),pre); return; }
+  pre.textContent=s.length>LIM?s.slice(0,LIM):s; body.replaceChildren(pre);
+  if(s.length>LIM){ const b=el("button","btn more",`Showing the first ${fmtB(LIM)} of ${fmtB(s.length)} – show all`);
+    b.onclick=()=>{pre.textContent=s; b.remove();}; body.append(b); }
+}
+const PAGE=200;
+function jnode(key,v,open){
+  const d=el("div","jn");
+  const kspan=()=>{ if(key===null) return null; const k=el("span","k",typeof key==="number"?`[${key}]`:JSON.stringify(key)); return k; };
+  if(v!==null&&typeof v==="object"){
+    const arr=Array.isArray(v), keys=arr?null:Object.keys(v), n=arr?v.length:keys.length;
+    const t=el("span","jt"); const k=kspan(); if(k){ t.append(k,": "); }
+    t.append(el("span","z",arr?`[ ${n} item${n===1?"":"s"} ]`:`{ ${n} field${n===1?"":"s"} }`));
+    const kids=el("div"); kids.hidden=true; let shown=0;
+    const more=()=>{ const end=Math.min(n,shown+PAGE), f=document.createDocumentFragment();
+      for(let i=shown;i<end;i++) f.append(arr?jnode(i,v[i],false):jnode(keys[i],v[keys[i]],false));
+      shown=end; kids.querySelector(":scope > .more")?.remove(); kids.append(f);
+      if(shown<n){ const b=el("button","btn more",`Show ${Math.min(PAGE,n-shown)} more (${n-shown} left)`); b.onclick=more; kids.append(b); } };
+    t.onclick=()=>{ if(!shown) more(); kids.hidden=!kids.hidden; t.classList.toggle("open",!kids.hidden); };
+    d.append(t,kids); if(open&&n){ more(); kids.hidden=false; t.classList.add("open"); }
+    return d; }
+  const k=kspan(); if(k) d.append(k,": ");
+  const cls=typeof v==="string"?"s":typeof v==="number"?"n":typeof v==="boolean"?"b":"z";
+  d.append(el("span",cls,typeof v==="string"?(v.includes("\n")?"\n"+v:JSON.stringify(v)):String(v)));
+  if(typeof v==="string"&&v.includes("\n")) d.style.whiteSpace="normal";
+  return d;
+}
+
+/* ---------- open: file picker, drag & drop, or the zip the collector app points to ---------- */
+async function fromFile(f){ if(!f) return; try{ await load(await f.arrayBuffer(), f.name); }catch(e){ showErr(e.message); } }
+$("file").onchange=e=>fromFile(e.target.files[0]); $("file2").onchange=e=>{ $("pick").hidden=false; fromFile(e.target.files[0]); };
+const dz=$("drop");
+["dragenter","dragover"].forEach(t=>dz.addEventListener(t,e=>{e.preventDefault(); dz.classList.add("over");}));
+["dragleave","drop"].forEach(t=>dz.addEventListener(t,e=>{e.preventDefault(); dz.classList.remove("over");}));
+dz.addEventListener("drop",e=>fromFile(e.dataTransfer.files[0]));
+(async()=>{ const m=/^#zip=(\/download\/[A-Za-z0-9-]+|\/[A-Za-z0-9_.-]+\.zip)$/.exec(location.hash);  // same-origin only
+  if(!m||location.protocol==="file:") return;
+  $("msg").replaceChildren(el("div","card muted","Opening the collection zip…"));
+  try{ const r=await fetch(m[1]); if(!r.ok) throw new Error("the collector app no longer has this file (HTTP "+r.status+") – choose it below instead.");
+    const name=decodeURIComponent((/filename="([^"]+)"/.exec(r.headers.get("Content-Disposition")||"")||[,m[1].split("/").pop()])[1]);
+    await load(await r.arrayBuffer(), name); }
+  catch(e){ showErr("Could not open the zip: "+e.message); } })();
+</script>
+</body></html>

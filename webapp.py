@@ -76,16 +76,24 @@ class Handler(BaseHTTPRequestHandler):
                 body = (f"<div class=card><h2 class=ok>✔ Collection complete</h2>{live_ui.summary_html(j)}"
                         f"<p>File: <b>{name}</b><br><small>Saved in {html.escape(str(OUT_DIR))}</small></p>"
                         f"<a class=btn href=/download/{html.escape(jid)}>⬇ Download the zip</a> "
+                        f"<a class=btn href='/viewer#zip=/download/{html.escape(jid)}' target=_blank rel=noopener>🔍 View collected data</a> "
                         f"<a class='btn alt' href=/>New collection</a>"
                         f"<div class=note><b>Next:</b> send this zip to your Cisco Customer Success Specialist (CSS) engineer, using the secure method they "
-                        f"give you. Please don't post it in public places or chat rooms. You can open it first to review exactly what is inside "
-                        f"(README.txt and raw/*.json); passwords and keys are already replaced with [redacted].</div>"
+                        f"give you. Please don't post it in public places or chat rooms. Click <b>View collected data</b> to review exactly what is inside "
+                        f"(every data set and its JSON file); passwords and keys are already replaced with [redacted]. "
+                        f"Later, open <b>viewer.html</b> in the collector folder and choose the zip.</div>"
                         f"<h3>Console</h3><div class=log>{log}</div></div>")
                 return self._send(page(body))
             if st == "failed":
                 return self._send(page(f"<div class=card><h2 class=err>✖ Collection failed</h2><p>{html.escape(err)}</p>"
                                        f"<a class=btn href=/>Try again</a><h3>Console</h3><div class=log>{log}</div></div>"))
             return self._send(page(live_ui.running_html(j), refresh=True, script=live_ui.script(jid)))
+        if self.path == "/viewer":  # read-only viewer for the collected zip (runs in the browser)
+            v = Path(__file__).resolve().parent / "viewer.html"
+            if not v.is_file():
+                return self._send(page("<div class=card><p>The viewer file (viewer.html) is missing from this collector folder. "
+                                       "Open the zip directly, or download the collector again.</p></div>"), 404)
+            return self._send(v.read_bytes())
         if self.path.startswith("/download/"):
             j = JOBS.get(self.path.split("/")[2])
             if not j or j["state"] != "done":

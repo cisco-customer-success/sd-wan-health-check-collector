@@ -47,6 +47,14 @@ FIXED_START, FIXED_END = 4.0, 3.0
 # Collector / tool release history, newest first. Bump collector_app/VERSION to CHANGELOG[0][0] whenever
 # a collection data set is added (tests enforce that endpoints.collection_count() and the version stay in step).
 CHANGELOG: list[tuple[str, str, int, list[str]]] = [  # (version, date, endpoint count, what's new)
+    ("1.8.0", "2026-11-26", 111, [
+        "Collected-data viewer: after the collection, click View collected data to see every data set (collected or not, "
+        "its file in the zip, the API it came from, records and size) and read each JSON file (tree or text, line search, "
+        "copy, download). Later: open viewer.html in the collector folder and choose the zip. Runs only in your browser.",
+        "Tool: the Assessment section starts with Security Hardening and Security Vulnerabilities; Findings and the Remediation "
+        "Plan mark security items (filter 'Security only'), with one item per Critical/High PSIRT and one per hardening control "
+        "to verify manually.",
+    ]),
     ("1.7.0", "2026-11-26", 111, [
         "Traffic & utilisation: reads 7-day top applications, application families and top talkers (from app "
         "recognition, where routers have it switched on) and average/peak use of every WAN circuit.",

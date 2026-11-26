@@ -93,6 +93,7 @@ def main() -> int:
         print(f"\nCollection failed: {type(e).__name__}: {msg}", file=sys.stderr)
         return 1
     print(f"\nSend this file to your Cisco team:\n  {path}")
+    print(f"To review what is inside, open viewer.html (in {HERE}) in a browser and choose the zip.")
     return 0
 
 
